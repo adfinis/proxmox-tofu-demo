@@ -1,0 +1,121 @@
+---
+name: deploy
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  check_submodule:
+    outputs:
+      submodule_sha: ${{ steps.get_submodule_sha.outputs.submodule_sha }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          submodules: true
+      - name: Get submodule commit SHA
+        id: get_submodule_sha
+        run: |
+          SUBMODULE_SHA=$(git submodule status --recursive | grep proxmox-vagrant-box | awk '{print $1}')
+          echo "Submodule commit SHA: $SUBMODULE_SHA"
+          echo "submodule_sha=$SUBMODULE_SHA" >> $GITHUB_OUTPUT
+
+  box_builer:
+    needs: check_submodule
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          submodules: true
+
+      - name: Cache box build
+        uses: actions/cache@v4
+        id: cache-box
+        with:
+          path: |
+            ./proxmox-vagrant-box/proxmox-ve-amd64-libvirt.box
+            ./proxmox-vagrant-box/proxmox-ve-amd64-libvirt.box.json
+          key: proxmox-box-${{ needs.check_submodule.outputs.submodule_sha }}
+
+      - name: Debug cache hit
+        run: |
+          echo "Cache hit: ${{ steps.cache-box.outputs.cache-hit }}"
+
+      - name: Setup packer
+        if: ${{ steps.cache-box.outputs.cache-hit != 'true' }}
+        uses: hashicorp/setup-packer@v3
+        with:
+          version: latest
+
+      - name: Packer init
+        if: ${{ steps.cache-box.outputs.cache-hit != 'true' }}
+        working-directory: ./proxmox-vagrant-box
+        run: packer init ./proxmox-ve.pkr.hcl
+
+      - name: Setup QEMU and run build
+        if: ${{ steps.cache-box.outputs.cache-hit != 'true' }}
+        working-directory: ./proxmox-vagrant-box
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y qemu-system xorriso
+          sudo make build-libvirt
+
+  setup_cluster:
+    needs:
+      - check_submodule
+      - box_builer
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Cache box build
+        uses: actions/cache@v4
+        id: cache-box
+        with:
+          path: |
+            ./proxmox-vagrant-box/proxmox-ve-amd64-libvirt.box
+            ./proxmox-vagrant-box/proxmox-ve-amd64-libvirt.box.json
+          key: proxmox-box-${{ needs.check_submodule.outputs.submodule_sha }}
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            wget lsb-release gpg nfs-kernel-server \
+            qemu-kvm qemu-utils ruby-dev libvirt-dev bridge-utils dnsmasq-base \
+            libvirt-daemon-system libvirt-clients
+
+      - name: Configure libvirt
+        run: |
+          sudo systemctl enable --now libvirtd
+          sudo usermod -a -G kvm $USER
+          sudo usermod -a -G libvirt $USER
+          sudo usermod -a -G libvirt-qemu $USER
+          sudo systemctl restart libvirtd
+
+      - name: Install vagrant
+        run: >-
+          wget -O- https://apt.releases.hashicorp.com/gpg |
+            sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg &&
+            echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" |
+            sudo tee /etc/apt/sources.list.d/hashicorp.list &&
+            sudo apt-get update &&
+            sudo apt-get install -y vagrant
+
+      - name: Load box to vagrant
+        working-directory: ./proxmox-vagrant-box
+        run: sudo vagrant box add --force proxmox-ve-amd64 proxmox-ve-amd64-libvirt.box.json
+
+      - name: Install vagrant plugins
+        run: sudo vagrant plugin install vagrant-libvirt vagrant-reload
+
+      - name: Start cluster
+        working-directory: ./provision
+        run: sudo vagrant up
