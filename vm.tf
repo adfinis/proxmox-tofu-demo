@@ -58,8 +58,8 @@ resource "proxmox_virtual_environment_vm" "debian_template" {
   }
 
   network_device {
-    # This is the default vmbridge perfectly fine for a demo
-    bridge = "vmbr0"
+    // Use the SDN
+    bridge = resource.proxmox_virtual_environment_sdn_vnet.vnet1.id
   }
 }
 
@@ -84,3 +84,4 @@ resource "tls_private_key" "debian_vm_key" {
   algorithm = "RSA"
   rsa_bits  = 2048
 }
+

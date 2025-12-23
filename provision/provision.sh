@@ -46,6 +46,8 @@ iface vmbr0 inet static
     # NAT through eth0.
     post-up   iptables -t nat -A POSTROUTING -s '$ip/24' ! -d '$ip/24' -o eth0 -j MASQUERADE
     post-down iptables -t nat -D POSTROUTING -s '$ip/24' ! -d '$ip/24' -o eth0 -j MASQUERADE
+
+source /etc/network/interfaces.d/*
 EOF
 sed -i -E "s,^[^ ]+( .*pve.*)\$,$ip\1," /etc/hosts
 sed 's,\\,\\\\,g' >/etc/issue <<'EOF'
