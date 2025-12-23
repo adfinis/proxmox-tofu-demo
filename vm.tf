@@ -49,6 +49,9 @@ resource "proxmox_virtual_environment_vm" "debian_template" {
     # This generates a password everytime.
     # Useful for a demo, but a bit cumbersome. Best is to use a keystore integration
     # e.g. https://search.opentofu.org/provider/hashicorp/vault/v4.0.0 -> TODO: Can this provider also be used with https://openbao.org/?
+    # This will store the password in clear text in the tofu state file. Make sure to encrypt the state if you use this method.
+    # Best practice would be to use an ephemeral resource for this. But the provider doesn't support that yet.
+    # See: https://github.com/bpg/terraform-provider-proxmox/issues/2432
     user_account {
       keys     = [trimspace(tls_private_key.debian_vm_key.public_key_openssh)]
       password = random_password.debian_vm_password.result
