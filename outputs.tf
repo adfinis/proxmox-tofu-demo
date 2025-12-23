@@ -11,3 +11,7 @@ output "debian_vm_private_key" {
 output "debian_vm_public_key" {
   value = tls_private_key.debian_vm_key.public_key_openssh
 }
+
+# output "debian_vm_ip_addresses" {
+#   value = proxmox_virtual_environment_vm.debian_vm.ipv4_addresses
+# }

@@ -39,11 +39,11 @@ resource "proxmox_virtual_environment_vm" "debian_template" {
 
   # Defines cloud-init configurations
   initialization {
-    #ip_config {
-    #  ipv4 {
-    #    address = "dhcp"
-    #  }
-    #}
+    ip_config {
+      ipv4 {
+        address = "dhcp"
+      }
+    }
     datastore_id = var.datastore_id # where the cloud-init disk will be placed
 
     # This generates a password everytime.
@@ -53,11 +53,17 @@ resource "proxmox_virtual_environment_vm" "debian_template" {
     # Best practice would be to use an ephemeral resource for this. But the provider doesn't support that yet.
     # See: https://github.com/bpg/terraform-provider-proxmox/issues/2432
     user_account {
-      keys     = [trimspace(tls_private_key.debian_vm_key.public_key_openssh)]
-      password = random_password.debian_vm_password.result
+      keys = [trimspace(tls_private_key.debian_vm_key.public_key_openssh)]
+      #password = random_password.debian_vm_password.result
+      password = "123456"
       username = "debian"
     }
-    #user_data_file_id = proxmox_virtual_environment_file.user_data_cloud_config.id
+
+    user_data_file_id = proxmox_virtual_environment_file.user_data_cloud_config.id
+  }
+
+  operating_system {
+    type = "l26" // Linux Kernel 2.6 - 6.X.
   }
 
   network_device {
@@ -87,3 +93,67 @@ resource "tls_private_key" "debian_vm_key" {
   algorithm = "ED25519"
 }
 
+
+resource "proxmox_virtual_environment_file" "user_data_cloud_config" {
+  content_type = "snippets"
+  datastore_id = var.isostore_id
+  node_name    = var.node_name
+
+  source_raw {
+    data = <<-EOF
+    #cloud-config
+    hostname: debian-template
+    timezone: Europe/Zurich
+    users:
+      - default
+      - name: debian
+        groups:
+          - sudo
+        shell: /bin/bash
+        ssh_authorized_keys:
+          - ${trimspace(resource.tls_private_key.debian_vm_key.public_key_openssh)}
+        sudo: ALL=(ALL) NOPASSWD:ALL
+    package_update: true
+    packages:
+      - qemu-guest-agent
+      - net-tools
+      - curl
+    runcmd:
+      - systemctl enable qemu-guest-agent
+      - systemctl start qemu-guest-agent
+      - echo "done" > /tmp/cloud-config.done
+    EOF
+
+    file_name = "user-data-cloud-config.yaml"
+  }
+}
+
+// Clone the previously created template
+resource "proxmox_virtual_environment_vm" "debian_vm" {
+  name      = "debian-vm-01"
+  node_name = var.node_name
+
+  clone {
+    vm_id = proxmox_virtual_environment_vm.debian_template.vm_id
+    full  = false // lets created a linked clone
+  }
+
+  agent {
+    enabled = false
+  }
+
+  memory {
+    dedicated = 768
+  }
+
+  initialization {
+    dns {
+      servers = ["1.1.1.1"]
+    }
+    ip_config {
+      ipv4 {
+        address = "dhcp"
+      }
+    }
+  }
+}

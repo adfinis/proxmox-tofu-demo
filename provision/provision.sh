@@ -22,6 +22,9 @@ if growpart /dev/[vs]da 3; then
     lvextend --extents +100%FREE /dev/pve/data
 fi
 
+# enable snippets for the local storage
+pvesm set local --content vztmpl,iso,backup,import,snippets
+
 # configure the network for NATting.
 ifdown vmbr0
 cat >/etc/network/interfaces <<EOF
