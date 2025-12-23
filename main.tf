@@ -1,22 +1,3 @@
-// Define the required Tofu providers
-terraform {
-  required_providers {
-    proxmox = {
-      source  = "bpg/proxmox"
-      version = "0.89.1"
-    }
-  }
-}
-variable "node_name" {
-  type = string
-}
-variable "datastore_id" {
-  type = string
-}
-variable "isostore_id" {
-  type = string
-}
-
 // Configure the proxmox provider
 provider "proxmox" {
   // endpoint to our proxmox server
@@ -32,7 +13,7 @@ provider "proxmox" {
 }
 
 # Define the Repository. Change if there is a subscription
-resource "proxmox_virtual_environment_apt_standard_repository" "example" {
+resource "proxmox_virtual_environment_apt_standard_repository" "no_subscription" {
   # See also https://search.opentofu.org/provider/bpg/proxmox/latest/docs/resources/virtual_environment_apt_standard_repository#required
   # If ceph is used, also add a repo like 'ceph-reef-no-subscription'
   handle = "no-subscription"
@@ -55,16 +36,16 @@ resource "proxmox_virtual_environment_vm" "ubuntu_template" {
   description = "Tofu defined Ubuntu VM Template"
 
   template = true
-  started = false
+  started  = false
 
   cpu {
     cores = 1
-    type         = "x86-64-v2-AES"  # recommended for modern CPUs
+    type  = "x86-64-v2-AES" # recommended for modern CPUs
   }
 
   memory {
     dedicated = 1024
-    floating = 1024 # set equal to dedicated to enable ballooning
+    floating  = 1024 # set equal to dedicated to enable ballooning
   }
 
   # Only required for UEFI
@@ -113,7 +94,7 @@ resource "proxmox_virtual_environment_download_file" "ubuntu_cloud_image" {
   content_type = "import"
   datastore_id = var.isostore_id
   node_name    = "pve"
-  url = "https://cloud-images.ubuntu.com/noble/current/noble-server-cloudimg-amd64.img"
+  url          = "https://cloud-images.ubuntu.com/noble/current/noble-server-cloudimg-amd64.img"
   # need to rename the file to *.qcow2 to indicate the actual file format for import
   file_name = "noble-server-cloudimg-amd64.qcow2"
 }
@@ -129,16 +110,3 @@ resource "tls_private_key" "ubuntu_vm_key" {
   rsa_bits  = 2048
 }
 
-output "ubuntu_vm_password" {
-  value     = random_password.ubuntu_vm_password.result
-  sensitive = true
-}
-
-output "ubuntu_vm_private_key" {
-  value     = tls_private_key.ubuntu_vm_key.private_key_pem
-  sensitive = true
-}
-
-output "ubuntu_vm_public_key" {
-  value = tls_private_key.ubuntu_vm_key.public_key_openssh
-}
