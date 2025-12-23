@@ -5,7 +5,7 @@ variable "node_name" {
 
 variable "datastore_id" {
   type    = string
-  default = "local"
+  default = "local-lvm"
 }
 
 variable "isostore_id" {
