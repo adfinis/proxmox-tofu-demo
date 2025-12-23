@@ -9,9 +9,13 @@ terraform {
 
 provider "proxmox" {
   endpoint = "https://10.10.10.2:8006/"
+
   username = "root@pam"
-  # use PROXMOX_VE_PASSWORD env var in production
+
+  # see provider docs for authentication setup in prod
+  # https://search.opentofu.org/provider/bpg/proxmox/latest#authentication
   password = "password"
+
   # self-signed certificate
   insecure = true
 }
