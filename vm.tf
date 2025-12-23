@@ -81,7 +81,6 @@ resource "random_password" "debian_vm_password" {
 }
 
 resource "tls_private_key" "debian_vm_key" {
-  algorithm = "RSA"
-  rsa_bits  = 2048
+  algorithm = "ED25519"
 }
 
