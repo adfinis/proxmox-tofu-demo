@@ -1,0 +1,4 @@
+terraform*
+.terraform*
+provision/.vagrant
+provision/shared
