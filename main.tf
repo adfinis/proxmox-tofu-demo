@@ -1,3 +1,4 @@
+// Define the required Tofu providers
 terraform {
   required_providers {
     proxmox = {
@@ -7,13 +8,14 @@ terraform {
   }
 }
 
+// Configure the proxmox provider
 provider "proxmox" {
+  // endpoint to our proxmox server
   endpoint = "https://10.10.10.2:8006/"
-
-  username = "root@pam"
 
   # see provider docs for authentication setup in prod
   # https://search.opentofu.org/provider/bpg/proxmox/latest#authentication
+  username = "root@pam"
   password = "password"
 
   # self-signed certificate
