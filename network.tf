@@ -6,6 +6,8 @@ resource "proxmox_virtual_environment_sdn_zone_simple" "sdn1" {
 
   // could also be netbox
   ipam = "pve"
+
+  dhcp = "dnsmasq"
 }
 
 // Create the VNet

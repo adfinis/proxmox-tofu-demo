@@ -52,6 +52,11 @@ iface vmbr0 inet static
 
 source /etc/network/interfaces.d/*
 EOF
+
+# install dnsmasq for DHCP of the SDN
+apt-get install -y --no-install-recommends  dnsmasq
+systemctl disable --now dnsmasq.service || true
+
 sed -i -E "s,^[^ ]+( .*pve.*)\$,$ip\1," /etc/hosts
 sed 's,\\,\\\\,g' >/etc/issue <<'EOF'
 
