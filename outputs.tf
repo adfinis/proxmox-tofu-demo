@@ -4,7 +4,7 @@ output "debian_vm_password" {
 }
 
 output "debian_vm_private_key" {
-  value     = tls_private_key.debian_vm_key.private_key_pem
+  value     = tls_private_key.debian_vm_key.private_key_openssh
   sensitive = true
 }
 
