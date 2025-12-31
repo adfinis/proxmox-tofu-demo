@@ -125,10 +125,22 @@ jobs:
         with:
           tofu_version: 1.11.1
 
-      - run: tofu init
+      # - run: tofu init
 
-      - name: Run tofu plan
-        run: tofu plan -no-color
+      # - name: Run tofu plan
+      #   run: tofu plan -no-color
 
-      - name: Run tofu apply
-        run: tofu apply -auto-approve
+      # - name: Run tofu apply
+      #   run: tofu apply -auto-approve
+
+      - name: Setup golang
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: "./test/go.mod"
+
+      - name: Create route to SDN
+        run: sudo ip route add 10.10.20.0/24 via 10.10.10.2
+
+      - name: Run tests
+        working-directory: ./test
+        run: go test -v ./...

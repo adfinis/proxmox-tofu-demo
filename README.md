@@ -8,9 +8,10 @@
     - [VM Credentials](#vm-credentials)
     - [Connect to the SDN](#connect-to-the-sdn)
 
-This repo consists of 4 parts:
-- `/proxmox-vagrant-box` is a submodule of https://github.com/adfinis-forks/proxmox-ve to build a new Proxmox Base Box
-- `provision/` contains an example configuration to bring up a simple Proxmox in a VM for testing
+This repo consists of multiple:
+- [`./proxmox-vagrant-box`](./proxmox-vagrant-box/) is a submodule of https://github.com/adfinis-forks/proxmox-ve to build a new Proxmox Base Box
+- [`./provision`](./provision/) contains an example configuration to bring up a simple Proxmox in a VM for testing
+- [`./test`](./test/) E2E tests to see if our code is actually working
 - Lots of tofu code that is explained [here](#tofu-configuration-files)
 - A guide about how to deploy proxmox in  [production](./PRODUCTION.md)
 
