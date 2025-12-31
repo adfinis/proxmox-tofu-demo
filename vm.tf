@@ -37,19 +37,25 @@ resource "proxmox_virtual_environment_vm" "debian_template" {
     size         = 20
   }
 
+  // When enabling the guest agent, make sure it's either installed already in the VM image,
+  // or that it's installed via cloud-init (see below).
+  // Otherwise the provider will hang indefinitely while trying to read the IP from the VM.
+  agent {
+    enabled = true
+  }
+
   // Defines cloud-init configurations
   initialization {
+    // Due to a bug, we must set this to scsiX if we use UEFI.
+    // https://forum.proxmox.com/threads/solved-cloud-init-ubuntu-template-vm-uefi-customization.151811/
+    interface    = "scsi30"
+    datastore_id = var.datastore_id // where the cloud-init disk will be placed
     ip_config {
       ipv4 {
-        //address = "dhcp"
-        address = "10.10.10.5/24"
-        gateway = "10.10.10.1"
+        address = "dhcp"
       }
     }
-    dns {
-      servers = ["9.9.9.9"]
-    }
-    datastore_id      = var.datastore_id // where the cloud-init disk will be placed
+    // use the user-data file we created below.
     user_data_file_id = proxmox_virtual_environment_file.user_data_cloud_config.id
   }
 
@@ -58,10 +64,11 @@ resource "proxmox_virtual_environment_vm" "debian_template" {
   }
 
   network_device {
-    // Use the SDN
-    #bridge = resource.proxmox_virtual_environment_sdn_vnet.vnet1.id
-    bridge = "vmbr0"
+    // Use the SDN we created previously
+    bridge = resource.proxmox_virtual_environment_sdn_vnet.vnet1.id
   }
+
+  depends_on = [proxmox_virtual_environment_sdn_subnet.dhcp1]
 }
 
 // Download a debian 13 image
@@ -105,6 +112,7 @@ resource "proxmox_virtual_environment_file" "user_data_cloud_config" {
     users:
       - default
       - name: debian
+        password: ${random_password.debian_vm_password.result}
         groups:
           - sudo
         shell: /bin/bash
@@ -136,35 +144,22 @@ resource "proxmox_virtual_environment_vm" "debian_vm" {
     full  = false // lets created a linked clone
   }
 
-  agent {
-    enabled = true
-  }
-
   memory {
     dedicated = 768
   }
 
-  network_device {
-    // Use the SDN
-    #bridge = resource.proxmox_virtual_environment_sdn_vnet.vnet1.id
-    bridge = "vmbr0"
-  }
-
-  initialization {
+  /*   initialization {
     // Due to a bug, we must set this to scsiX if we use UEFI.
     // https://forum.proxmox.com/threads/solved-cloud-init-ubuntu-template-vm-uefi-customization.151811/
     interface = "scsi30"
-    dns {
-      servers = ["9.9.9.9"]
-    }
     ip_config {
       ipv4 {
-        //address = "dhcp"
-        address = "10.10.10.10/24"
-        gateway = "10.10.10.1"
+        address = "dhcp"
       }
     }
     user_data_file_id = proxmox_virtual_environment_file.user_data_cloud_config.id
-  }
+  } */
+
+  depends_on = [proxmox_virtual_environment_sdn_subnet.dhcp1]
 }
 
