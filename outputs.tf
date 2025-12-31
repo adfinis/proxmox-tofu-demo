@@ -3,6 +3,7 @@ output "debian_vm_password" {
   sensitive = true
 }
 
+// Use `tofu output -show-sensitive -json | jq -r .debian_vm_private_key.value | ssh-add -` to add the private key to your ssh-agent.
 output "debian_vm_private_key" {
   value     = tls_private_key.debian_vm_key.private_key_openssh
   sensitive = true
@@ -12,6 +13,6 @@ output "debian_vm_public_key" {
   value = tls_private_key.debian_vm_key.public_key_openssh
 }
 
-# output "debian_vm_ip_addresses" {
-#   value = proxmox_virtual_environment_vm.debian_vm.ipv4_addresses
-# }
+output "debian_vm_ip_addresses" {
+  value = proxmox_virtual_environment_vm.debian_vm.ipv4_addresses
+}
