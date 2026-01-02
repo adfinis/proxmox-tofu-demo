@@ -57,7 +57,9 @@ EOF
 apt-get install -y --no-install-recommends  dnsmasq
 systemctl disable --now dnsmasq.service || true
 
-sed -i -E "s,^[^ ]+( .*pve.*)\$,$ip\1," /etc/hosts
+# replace "pve." with the actual hostname
+# TODO: shouldn't this be part of the upstream proxmox provisioning?
+sed -i -E "s,^[^ ]+( .*pve.*)\$,$ip $fqdn ${fqdn%%.*}," /etc/hosts
 sed 's,\\,\\\\,g' >/etc/issue <<'EOF'
 
      _ __  _ __ _____  ___ __ ___   _____  __ __   _____

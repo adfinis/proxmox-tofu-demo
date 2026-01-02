@@ -76,7 +76,7 @@ resource "proxmox_virtual_environment_download_file" "debian_13_img" {
   content_type       = "import"
   datastore_id       = var.isostore_id
   file_name          = "debian-13-generic-amd64-20251117-2299.qcow2"
-  node_name          = "pve"
+  node_name          = var.node_name
   url                = "https://cloud.debian.org/images/cloud/trixie/20251117-2299/debian-13-generic-amd64-20251117-2299.qcow2"
   checksum           = "1882f2d0debfb52254db1b0fc850d222fa68470a644a914d181f744ac1511a6caa1835368362db6dee88504a13c726b3ee9de0e43648353f62e90e075f497026"
   checksum_algorithm = "sha512"
