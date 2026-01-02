@@ -8,15 +8,15 @@
     - [VM Credentials](#vm-credentials)
     - [Connect to the SDN](#connect-to-the-sdn)
 
-This repo consists of multiple:
+This repo consists of multiple parts:
 - [`./proxmox-vagrant-box`](./proxmox-vagrant-box/) is a submodule of https://github.com/adfinis-forks/proxmox-ve to build a new Proxmox Base Box
-- [`./provision`](./provision/) contains an example configuration to bring up a simple Proxmox in a VM for testing
+- [`./provision`](./provision/) contains an example configuration to bring up a simple Proxmox (or cluster) in a VM for testing
 - [`./test`](./test/) E2E tests to see if our code is actually working
 - Lots of tofu code that is explained [here](#tofu-configuration-files)
-- A guide about how to deploy proxmox in  [production](./PRODUCTION.md)
+- A guide about how to deploy proxmox in [production](./PRODUCTION.md)
 
 > [!NOTE]
-> We are using Vagrant to provision a simple proxmox instance inside libvirt. This is just for demo purposes and to test the tofu code inside a GitHub action. If you are just here for the tofu code, please feel free to ignore everything in the `provision` and `proxmox-vagrant-box`.
+> We are using Vagrant to provision a simple Proxmox instance inside libvirt. This is just for demo purposes and to test the tofu code inside a GitHub action. If you are just here for the tofu code, please feel free to ignore everything in the `provision` and `proxmox-vagrant-box`.
 
 
 ## Getting ready (for the demo)
@@ -35,10 +35,17 @@ vagrant box add -f proxmox-ve-amd64 proxmox-ve-amd64-libvirt.box.json
 Now we can start the Proxmox VM:
 ```
 cd provision/
+ln -s Vagrantfile.single Vagrantfile
+# If a 2 node cluster is desired, use this instead
+# ln -s Vagrantfile.cluster Vagrantfile
 vagrant up
 ```
 
 ## Applying the Tofu
+
+
+> [!NOTE]
+> When using the 2node cluster, add `-var-file=cluster.tfvars` to the below commands.
 
 ```bash
 # initialize the tofu state and install the providers

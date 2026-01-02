@@ -119,6 +119,10 @@ jobs:
 
       - name: Start cluster
         working-directory: ./provision
+        run: ln -s Vagrantfile.single Vagrantfile sudo vagrant up
+
+      - name: Start cluster
+        working-directory: ./provision
         run: sudo vagrant up
 
       - uses: opentofu/setup-opentofu@v1
