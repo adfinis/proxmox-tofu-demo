@@ -6,6 +6,7 @@ VM_ROOT_DISK_SIZE_GB = 15
 
 Vagrant.configure('2') do |config|
   config.vm.box = 'proxmox-ve-amd64'
+  config.vm.hostname = 'pve.example.com'
   config.vm.provider :libvirt do |lv, config|
     lv.memory = VM_MEMORY_GB*1024
     lv.cpus = VM_CPU
@@ -16,10 +17,11 @@ Vagrant.configure('2') do |config|
   end
   ip = '10.10.10.2'
   config.vm.network :private_network,
+    libvirt__network_name: 'proxmox-terraform-demo',
     ip: ip,
     auto_config: false,
     libvirt__dhcp_enabled: false,
-    libvirt__forward_mode: 'none'
+    libvirt__forward_mode: 'nat'
   config.vm.provision :shell, path: 'provision.sh', args: ip
   config.vm.provision :shell, path: 'grub.sh'
   config.vm.provision :shell, path: 'provision-pveproxy-certificate.sh', args: ip
