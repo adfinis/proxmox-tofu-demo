@@ -119,7 +119,7 @@ jobs:
 
       - name: Start cluster
         working-directory: ./provision
-        run: ln -s Vagrantfile.single Vagrantfile sudo vagrant up
+        run: ln -s Vagrantfile.single Vagrantfile
 
       - name: Start cluster
         working-directory: ./provision

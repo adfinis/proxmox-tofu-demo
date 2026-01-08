@@ -12,8 +12,7 @@ This repo consists of multiple parts:
 - [`./proxmox-vagrant-box`](./proxmox-vagrant-box/) is a submodule of https://github.com/adfinis-forks/proxmox-ve to build a new Proxmox Base Box
 - [`./provision`](./provision/) contains an example configuration to bring up a simple Proxmox (or cluster) in a VM for testing
 - [`./test`](./test/) E2E tests to see if our code is actually working
-- Lots of tofu code that is explained [here](#tofu-configuration-files)
-- A guide about how to deploy proxmox in [production](./PRODUCTION.md)
+- Lots of tofu code that is briefly explained [here](#tofu-configuration-files) and inline
 
 > [!NOTE]
 > We are using Vagrant to provision a simple Proxmox instance inside libvirt. This is just for demo purposes and to test the tofu code inside a GitHub action. If you are just here for the tofu code, please feel free to ignore everything in the `provision` and `proxmox-vagrant-box`.
