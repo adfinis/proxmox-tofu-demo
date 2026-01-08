@@ -22,6 +22,9 @@ if growpart /dev/[vs]da 3; then
     lvextend --extents +100%FREE /dev/pve/data
 fi
 
+# enable snippets for the local storage
+pvesm set local --content vztmpl,iso,backup,import,snippets
+
 # configure the network for NATting.
 ifdown vmbr0
 cat >/etc/network/interfaces <<EOF
@@ -46,8 +49,17 @@ iface vmbr0 inet static
     # NAT through eth0.
     post-up   iptables -t nat -A POSTROUTING -s '$ip/24' ! -d '$ip/24' -o eth0 -j MASQUERADE
     post-down iptables -t nat -D POSTROUTING -s '$ip/24' ! -d '$ip/24' -o eth0 -j MASQUERADE
+
+source /etc/network/interfaces.d/*
 EOF
-sed -i -E "s,^[^ ]+( .*pve.*)\$,$ip\1," /etc/hosts
+
+# install dnsmasq for DHCP of the SDN
+apt-get install -y --no-install-recommends  dnsmasq
+systemctl disable --now dnsmasq.service || true
+
+# replace "pve." with the actual hostname
+# TODO: shouldn't this be part of the upstream proxmox provisioning?
+sed -i -E "s,^[^ ]+( .*pve.*)\$,$ip $fqdn ${fqdn%%.*}," /etc/hosts
 sed 's,\\,\\\\,g' >/etc/issue <<'EOF'
 
      _ __  _ __ _____  ___ __ ___   _____  __ __   _____

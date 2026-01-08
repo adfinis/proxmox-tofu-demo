@@ -6,6 +6,7 @@ on:
     branches:
       - main
   workflow_dispatch:
+  pull_request:
 
 jobs:
   check_submodule:
@@ -118,20 +119,32 @@ jobs:
 
       - name: Start cluster
         working-directory: ./provision
+        run: ln -s Vagrantfile.single Vagrantfile
+
+      - name: Start cluster
+        working-directory: ./provision
         run: sudo vagrant up
 
-  tofu:
-    needs: setup_cluster
-    runs-on: ubuntu-latest
-    steps:
       - uses: opentofu/setup-opentofu@v1
         with:
           tofu_version: 1.11.1
 
-      - run: tofu init
-      - id: plan
-        run: tofu plan -no-color
+      # - run: tofu init
 
-      - run: echo ${{ steps.plan.outputs.stdout }}
-      - run: echo ${{ steps.plan.outputs.stderr }}
-      - run: echo ${{ steps.plan.outputs.exitcode }}
+      # - name: Run tofu plan
+      #   run: tofu plan -no-color
+
+      # - name: Run tofu apply
+      #   run: tofu apply -auto-approve
+
+      - name: Setup golang
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: "./test/go.mod"
+
+      - name: Create route to SDN
+        run: sudo ip route add 10.10.20.0/24 via 10.10.10.2
+
+      - name: Run tests
+        working-directory: ./test
+        run: go test -v ./...
