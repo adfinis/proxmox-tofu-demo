@@ -5,10 +5,14 @@ provider "proxmox" {
 
   // see provider docs for authentication setup in prod
   // https://search.opentofu.org/provider/bpg/proxmox/latest#authentication
+  // Typically you'd want to create an API Token and add it as an environment variable in the CI
   username = "root@pam"
   password = "password"
 
-  // self-signed certificate
+  // self-signed certificate.
+  // It's possible to use Tofu to manage the certificate (https://search.opentofu.org/provider/bpg/proxmox/latest/docs/resources/virtual_environment_certificate)
+  // But this is a bit of a chicken-egg-problem. On first execution the certificate is not available (as tofu will deploy it), requiring `insecure`
+  // The recommendation is to keep the certificate setup a part of the initial (usually manual) setup of the Proxmox Nodes, or manage it in a separate TF module which has `insecure = true`
   insecure = true
 }
 
@@ -19,8 +23,3 @@ resource "proxmox_virtual_environment_apt_standard_repository" "no_subscription"
   handle = "no-subscription"
   node   = var.node_name
 }
-
-// TODO: Should SDN Networks be defined? In the example this could only be used for local-only networking...
-// But might still be interesting to readers.
-// It's important to note that SDN is currently partially still in tech preview (e.g. automated DHCP/IPAM)
-// But since DHCP/IPAM is kinda contradictory to managing state with OpenTofu, it should be OK to not use that.
